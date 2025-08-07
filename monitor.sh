@@ -18,3 +18,31 @@ fi
 
 prevFilesList=("$targetDir"/*)
 prevTimeStamp=$(date "+%s")
+
+while true; do
+    
+	sleep 1
+	
+	deleted=()
+	
+	#Get current state
+	currentFilesList=("$targetDir"/*)
+	currentTimeStampHumanReadable=$(date "-Iseconds")
+	
+	#Check for deleted files
+	for file in "${prevFilesList[@]}"; do
+		if [[ ! " ${currentFilesList[*]} " =~ " ${file} " ]]; then
+			deleted+=($file)
+		fi
+    done
+	
+	#Write logs - if anything changed
+	if [[ ${#deleted[@]} -gt 0 ]]; then
+		echo "$currentTimeStampHumanReadable,deleted,${deleted[@]}" >> $logFile
+	fi
+	
+	#Save current state as previous state
+	prevFilesList=(${currentFilesList[@]})
+	
+done
+
