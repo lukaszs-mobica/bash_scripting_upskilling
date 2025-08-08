@@ -24,6 +24,7 @@ while true; do
 	sleep 1
 	
 	deleted=()
+	added=()
 	
 	#Get current state
 	currentFilesList=("$targetDir"/*)
@@ -36,9 +37,20 @@ while true; do
 		fi
     done
 	
+	#Check for added files
+	for file in "${currentFilesList[@]}"; do
+		if [[ ! " ${prevFilesList[*]} " =~ " ${file} " ]]; then
+			added+=($file)
+		fi
+    done
+	
 	#Write logs - if anything changed
 	if [[ ${#deleted[@]} -gt 0 ]]; then
 		echo "$currentTimeStampHumanReadable,deleted,${deleted[@]}" >> $logFile
+	fi
+	
+	if [[ ${#added[@]} -gt 0 ]]; then
+		echo "$currentTimeStampHumanReadable,added,${added[@]}" >> $logFile
 	fi
 	
 	#Save current state as previous state

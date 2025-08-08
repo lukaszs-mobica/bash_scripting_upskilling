@@ -25,9 +25,11 @@ while true; do
 	
 	deleted=()
 	added=()
+	changed=()
 	
 	#Get current state
 	currentFilesList=("$targetDir"/*)
+	currentTimeStamp=$(date "+%s")
 	currentTimeStampHumanReadable=$(date "-Iseconds")
 	
 	#Check for deleted files
@@ -44,6 +46,19 @@ while true; do
 		fi
     done
 	
+	#Check for modified files
+	for file in "${currentFilesList[@]}"; do
+		#Check modification date
+		modifiedTimeStamp=$(stat --format="%Y" "$file")
+		if [[ $modifiedTimeStamp -gt $prevTimeStamp ]]; then
+			#Check if the file is NOT newly added
+			if [[ ! " ${added[*]} " =~ [[:space:]]${file}[[:space:]] ]]; then
+				changed+=($file)
+			fi
+			
+		fi
+	done
+	
 	#Write logs - if anything changed
 	if [[ ${#deleted[@]} -gt 0 ]]; then
 		echo "$currentTimeStampHumanReadable,deleted,${deleted[@]}" >> $logFile
@@ -53,8 +68,13 @@ while true; do
 		echo "$currentTimeStampHumanReadable,added,${added[@]}" >> $logFile
 	fi
 	
+	if [[ ${#changed[@]} -gt 0 ]]; then
+		echo "$currentTimeStampHumanReadable,changed,${changed[@]}" >> $logFile
+	fi
+	
 	#Save current state as previous state
 	prevFilesList=(${currentFilesList[@]})
+	prevTimeStamp=(${currentTimeStamp[@]})
 	
 done
 
